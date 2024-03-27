@@ -134,7 +134,7 @@ function CompareOccupancy() {
 
   if (allFinished) {
     return (
-      <div style={{ width: '35em', height: '35em', margin: 'auto' }}>
+      <div style={{ width: '27em', height: '27em', margin: 'auto' }}>
         <BarChart
           dataset={locationQueries.map((v) => {
             return { percentage: v.data && Math.floor(v.data.CurrentPercentage), location: v.data?.Name }
