@@ -159,7 +159,7 @@ function CompareOccupancy() {
 const queryClient = new QueryClient();
 
 export default function Home() {
-  const [selectedLocation, setSelectedLocation] = useState("West End");
+  const [selectedLocation, setSelectedLocation] = useState(LOCATIONS.keys().next().value)
 
   return (
     <>
