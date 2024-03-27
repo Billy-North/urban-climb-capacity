@@ -28,7 +28,7 @@ function LocationSelection(props: {
       value={props.selectedLocation}
       exclusive
       fullWidth
-      size="medium"
+      size={isMobile ? "small" : "medium"}
       orientation={isMobile ? "vertical" : "horizontal"}
 
     >
