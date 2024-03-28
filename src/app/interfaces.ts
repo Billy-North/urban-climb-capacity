@@ -17,3 +17,12 @@ interface OccupancyResponse {
     Floor: string,
     KidsNames: Array<unknown>
 }
+
+interface LastSet {
+    lastSetDate: string,
+    stationName: string
+}
+interface LastSetResponse {
+    lastSetDate: string,
+    stations: Array<LastSet>
+}

@@ -1,9 +1,9 @@
 "use client"
-import { Alert, CircularProgress, LinearProgress, ToggleButton, ToggleButtonGroup, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { BarChart, Gauge, axisClasses, gaugeClasses } from "@mui/x-charts";
+import { Alert, Avatar, Box, CircularProgress, Grid, LinearProgress, ListItem, ListItemText, ToggleButton, ToggleButtonGroup, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { BarChart, Gauge, gaugeClasses } from "@mui/x-charts";
 import { QueryClient, QueryClientProvider, useQueries, useQuery } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { LocationOccupancy } from "./api/urbanclumb";
+import { LastRouteSet, LocationOccupancy } from "./api/urbanclumb";
 
 const LOCATIONS = new Map([
   ['West End', "D969F1B2-0C9F-49A9-B2AC-D7775642F298"],
@@ -80,7 +80,7 @@ function Occopancy(props: { selectedLocation: string }) {
     return () => clearInterval(intervalId);
   }, []);
 
-  const { isPending, isError, data } = useQuery<OccupancyResponse>({
+  const { isPending, isError, data } = useQuery({
     queryKey: ['occupancy', locationId],
     refetchInterval: 6000,
     queryFn: () => LocationOccupancy(locationId)
@@ -108,6 +108,52 @@ function Occopancy(props: { selectedLocation: string }) {
     )
   }
 }
+
+function LatestRouteChanges(props: { selectedLocation: string }) {
+  const locationId = LOCATIONS.get(props.selectedLocation) || ''
+  const currentDate = new Date()
+  const { isError, data } = useQuery({
+    queryKey: ['latestRouteChanges', locationId],
+    queryFn: () => LastRouteSet(locationId)
+  })
+
+
+  if (isError) {
+    return <Alert severity="error">Failed to route data for: {props.selectedLocation}</Alert>
+  }
+  if (data) {
+    return (
+      <>
+        <Typography variant="h5">
+          Route Changes
+        </Typography>
+        <Grid sx={{ width: '100%', maxWidth: 325, margin: 'auto' }}>
+          <Grid>
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 2,
+                bgcolor: 'background.default',
+                display: 'grid',
+                gridTemplateColumns: { md: '1fr 1fr' },
+                gap: 1,
+                width: '100%'
+              }}
+            >
+              {data.stations.map((v) => (
+                <ListItem key={v.stationName} >
+                  <ListItemText primary={v.stationName} secondary={`${Math.ceil(Math.abs(currentDate.getTime() - new Date(v.lastSetDate).getTime()) / (1000 * 60 * 60 * 24))} day/s ago`} />
+                </ListItem>
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+      </>
+    )
+  }
+
+}
+
 
 function CompareOccupancy() {
   const locationQueries = useQueries({
@@ -169,9 +215,13 @@ export default function Home() {
 
       <QueryClientProvider client={queryClient}>
         <div style={{ margin: 'auto', textAlign: 'center', width: '60%', padding: 30 }}>
-          {selectedLocation !== COMPARE ? <Occopancy selectedLocation={selectedLocation} /> :
+          {selectedLocation !== COMPARE ? <><Occopancy selectedLocation={selectedLocation} />
+            <Box sx={{ p: 5 }}>
+              <LatestRouteChanges selectedLocation={selectedLocation} />
+            </Box></> :
             <CompareOccupancy />
           }
+
         </div>
       </QueryClientProvider>
     </ >
