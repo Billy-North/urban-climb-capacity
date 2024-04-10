@@ -24,20 +24,22 @@ import {
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { LastRouteSet, LocationOccupancy } from './api/urbanclumb'
 
-const LOCATIONS = new Map([
-  ['West End', 'D969F1B2-0C9F-49A9-B2AC-D7775642F298'],
-  ['Milton', '690326F9-98CE-4249-BD91-53A0676A137B'],
-  ['Newstead', 'A3010228-DFC6-4317-86C0-3839FFDF3FD0'],
-  ['Collingwood', '8674E350-D340-4AB3-A462-5595061A6950'],
-  ['Blackburn', '46E5373C-2310-4520-B576-CCB4E4EF548D'],
-  ['Townsville', '31D5CE53-0CA1-40A5-AEA6-65A72F786492'],
-])
+const LOCATIONS = {
+  'West End': 'D969F1B2-0C9F-49A9-B2AC-D7775642F298',
+  Milton: '690326F9-98CE-4249-BD91-53A0676A137B',
+  Newstead: 'A3010228-DFC6-4317-86C0-3839FFDF3FD0',
+  Collingwood: '8674E350-D340-4AB3-A462-5595061A6950',
+  Blackburn: '46E5373C-2310-4520-B576-CCB4E4EF548D',
+  Townsville: '31D5CE53-0CA1-40A5-AEA6-65A72F786492',
+} as const
 
 const COMPARE = 'Compare'
 
 function LocationSelection(props: {
-  selectedLocation: string
-  setSelectedLocation: Dispatch<SetStateAction<string>>
+  selectedLocation: keyof typeof LOCATIONS | typeof COMPARE
+  setSelectedLocation: Dispatch<
+    SetStateAction<keyof typeof LOCATIONS | typeof COMPARE>
+  >
 }) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -50,13 +52,17 @@ function LocationSelection(props: {
       size={isMobile ? 'small' : 'medium'}
       orientation={isMobile ? 'vertical' : 'horizontal'}
     >
-      {[...Array.from(LOCATIONS.keys()), COMPARE].map((location) => (
+      {[...Array.from(Object.keys(LOCATIONS)), COMPARE].map((location) => (
         <ToggleButton
           key={location}
-          onClick={() => props.setSelectedLocation(location)}
+          onClick={() =>
+            props.setSelectedLocation(
+              location as keyof typeof LOCATIONS | typeof COMPARE
+            )
+          }
           value={location}
         >
-          {location}
+          {location as any}
         </ToggleButton>
       ))}
     </ToggleButtonGroup>
@@ -86,8 +92,8 @@ function OccupancyGuage(props: { occupancy: number; fillColor: string }) {
   )
 }
 
-function Occopancy(props: { selectedLocation: string }) {
-  const locationId = LOCATIONS.get(props.selectedLocation) || ''
+function Occopancy(props: { selectedLocation: keyof typeof LOCATIONS }) {
+  const locationId = LOCATIONS[props.selectedLocation] || ''
   const [currentTime, setCurrentTime] = useState(new Date())
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -136,8 +142,10 @@ function Occopancy(props: { selectedLocation: string }) {
   }
 }
 
-function LatestRouteChanges(props: { selectedLocation: string }) {
-  const locationId = LOCATIONS.get(props.selectedLocation) || ''
+function LatestRouteChanges(props: {
+  selectedLocation: keyof typeof LOCATIONS
+}) {
+  const locationId = LOCATIONS[props.selectedLocation]
   const currentDate = new Date()
   const { isError, data } = useQuery({
     queryKey: ['latestRouteChanges', locationId],
@@ -192,7 +200,7 @@ function LatestRouteChanges(props: { selectedLocation: string }) {
 
 function CompareOccupancy() {
   const locationQueries = useQueries({
-    queries: Array.from(LOCATIONS.values()).map((locationId) => {
+    queries: Array.from(Object.values(LOCATIONS)).map((locationId) => {
       return {
         queryKey: ['occupancy', locationId],
         queryFn: () => LocationOccupancy(locationId),
@@ -248,9 +256,9 @@ function CompareOccupancy() {
 const queryClient = new QueryClient()
 
 export default function Home() {
-  const [selectedLocation, setSelectedLocation] = useState(
-    LOCATIONS.keys().next().value
-  )
+  const [selectedLocation, setSelectedLocation] = useState<
+    keyof typeof LOCATIONS | typeof COMPARE
+  >('West End')
 
   return (
     <>
